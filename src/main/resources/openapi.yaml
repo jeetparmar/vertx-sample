@@ -5,10 +5,10 @@ info:
   description: Vert.x REST API with Swagger
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8080/api
 
 paths:
-  /users:
+  /api/users:
     get:
       summary: Get all users
       operationId: getUsers
@@ -39,7 +39,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/User"
 
-  /users/{id}:
+  /api/users/{id}:
     get:
       summary: Get user by id
       operationId: getUserById

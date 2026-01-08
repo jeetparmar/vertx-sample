@@ -9,71 +9,82 @@ import io.vertx.ext.web.api.contract.openapi3.OpenAPI3RouterFactory;
 
 public class MainVerticle extends AbstractVerticle {
 
-	@Override
-	public void start() {
+  @Override
+  public void start() {
 
-		UserService userService = new UserService(vertx);
-		UserHandler userHandler = new UserHandler(userService);
+    UserService userService = new UserService(vertx);
+    UserHandler userHandler = new UserHandler(userService);
 
-		// 3️⃣ OpenAPI Router
-		OpenAPI3RouterFactory.create(vertx, "openapi.yaml").onSuccess(factory -> {
+    Router mainRouter = Router.router(vertx);
 
-			factory.addHandlerByOperationId("getUsers", userHandler::getUsers);
-			factory.addHandlerByOperationId("createUser", userHandler::createUser);
-			factory.addHandlerByOperationId("getUserById", userHandler::getUserById);
+    // 1️⃣ Serve OpenAPI YAML
+    mainRouter.get("/openapi.yaml").handler(ctx ->
+      ctx.response()
+        .putHeader("Content-Type", "application/yaml")
+        .sendFile("openapi.yaml")
+    );
 
-			Router mainRouter = factory.getRouter();
+    // 2️⃣ Swagger UI via CDN (NO STATIC FILES)
+    mainRouter.get("/docs").handler(ctx -> {
 
-			// 1️⃣ Serve OpenAPI YAML
-			mainRouter.get("/openapi.yaml").handler(
-					ctx -> ctx.response().putHeader("Content-Type", "application/yaml").sendFile("openapi.yaml"));
+      String html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Swagger UI</title>
+          <link rel="stylesheet"
+                href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
+        </head>
+        <body>
+          <div id="swagger-ui"></div>
 
-			// 2️⃣ Swagger UI via CDN (NO STATIC FILES)
-			mainRouter.get("/docs").handler(ctx -> {
+          <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+          <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
 
-				String html = """
-						<!DOCTYPE html>
-						<html>
-						<head>
-						  <meta charset="UTF-8">
-						  <title>Swagger UI</title>
-						  <link rel="stylesheet"
-						        href="https://unpkg.com/swagger-ui-dist/swagger-ui.css">
-						</head>
-						<body>
-						  <div id="swagger-ui"></div>
+          <script>
+            window.onload = () => {
+              SwaggerUIBundle({
+                url: '/openapi.yaml',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                  SwaggerUIBundle.presets.apis,
+                  SwaggerUIStandalonePreset
+                ],
+              });
+            };
+          </script>
+        </body>
+        </html>
+        """;
 
-						  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
-						  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
+      ctx.response()
+        .putHeader("Content-Type", "text/html")
+        .end(html);
+    });
 
-						  <script>
-						    window.onload = () => {
-						      SwaggerUIBundle({
-						        url: '/openapi.yaml',
-						        dom_id: '#swagger-ui',
-						        deepLinking: true,
-						        presets: [
-						          SwaggerUIBundle.presets.apis,
-						          SwaggerUIStandalonePreset
-						        ],
-						      });
-						    };
-						  </script>
-						</body>
-						</html>
-						""";
+    // 3️⃣ OpenAPI Router
+    OpenAPI3RouterFactory.create(vertx, "openapi.yaml")
+      .onSuccess(factory -> {
 
-				ctx.response().putHeader("Content-Type", "text/html").end(html);
-			});
+        factory.addHandlerByOperationId("getUsers", userHandler::getUsers);
+        factory.addHandlerByOperationId("createUser", userHandler::createUser);
+        factory.addHandlerByOperationId("getUserById", userHandler::getUserById);
 
-			vertx.createHttpServer().requestHandler(mainRouter).listen(8080);
+        mainRouter.mountSubRouter("/api", factory.getRouter());
 
-			System.out.println("Server running at http://localhost:8080");
-			System.out.println("Swagger UI at http://localhost:8080/docs");
-		}).onFailure(Throwable::printStackTrace);
-	}
+        vertx.createHttpServer()
+          .requestHandler(mainRouter)
+          .listen(8080);
 
-	public static void main(String[] args) {
-		Vertx.vertx().deployVerticle(new MainVerticle());
-	}
+        System.out.println("Server running at http://localhost:8080");
+        System.out.println("Swagger UI at http://localhost:8080/docs");
+      })
+      .onFailure(Throwable::printStackTrace);
+  }
+
+  public static void main(String[] args) {
+    Vertx.vertx().deployVerticle(new MainVerticle());
+  }
 }

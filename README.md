@@ -102,21 +102,28 @@ POST http://localhost:8080/users
 
 ---
 
-## 🧪 Testing
+## 📄 API Documentation (Swagger)
 
-You can test the APIs using:
+This project exposes interactive API documentation using **Swagger UI**.
 
-* Postman
-* curl
-* Any REST client
+Once the application is running, you can access Swagger here:
 
-Example using curl:
+👉 **Swagger UI:**
 
-```bash
-curl http://localhost:8080/users
+```
+http://localhost:8080/docs
 ```
 
+Swagger allows you to:
+
+* Explore all available endpoints
+* View request/response schemas
+* Test APIs directly from the browser
+
+No additional setup is required — Swagger is available as soon as the server starts.
+
 ---
+
 
 ## 📦 Build (Optional)
 
