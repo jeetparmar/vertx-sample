@@ -69,10 +69,32 @@ src/main/java
 
 ## 📌 API Endpoints
 
+### ➤ Login (Get JWT Token)
+
+```http
+POST http://localhost:8080/api/login
+```
+
+**Request Body (JSON):**
+
+```json
+{
+  "username": "your-username"
+}
+```
+**Response:**
+
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR..."
+}
+```
+---
 ### ➤ Get All Users
 
 ```http
 GET http://localhost:8080/users
+Authorization: Bearer <token>
 ```
 
 ---
@@ -81,6 +103,7 @@ GET http://localhost:8080/users
 
 ```http
 GET http://localhost:8080/users/{id}
+Authorization: Bearer <token>
 ```
 
 ---
@@ -89,6 +112,7 @@ GET http://localhost:8080/users/{id}
 
 ```http
 POST http://localhost:8080/users
+Authorization: Bearer <token>
 ```
 
 **Request Body (JSON):**

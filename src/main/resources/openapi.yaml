@@ -1,17 +1,53 @@
 openapi: 3.0.3
+
 info:
   title: User API
   version: 1.0.0
-  description: Vert.x REST API with Swagger
+  description: Vert.x REST API with Swagger + JWT
 
 servers:
   - url: http://localhost:8080/api
 
+security:
+  - bearerAuth: []  # global security for all endpoints except overridden
+
 paths:
-  /api/users:
+
+  /login:
+    post:
+      summary: Login and get JWT token
+      operationId: login
+      security: []   # disables JWT for login
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+              properties:
+                username:
+                  type: string
+      responses:
+        "200":
+          description: JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+
+  /users:
     get:
       summary: Get all users
       operationId: getUsers
+      tags:
+        - Users
       responses:
         "200":
           description: List of users
@@ -21,10 +57,14 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
 
     post:
       summary: Create user
       operationId: createUser
+      tags:
+        - Users
       requestBody:
         required: true
         content:
@@ -38,14 +78,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
 
-  /api/users/{id}:
+  /users/{id}:
     get:
       summary: Get user by id
       operationId: getUserById
+      tags:
+        - Users
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
           schema:
             type: string
@@ -58,8 +102,17 @@ paths:
                 $ref: "#/components/schemas/User"
         "404":
           description: User not found
+        "401":
+          description: Unauthorized
 
 components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     User:
       type: object
